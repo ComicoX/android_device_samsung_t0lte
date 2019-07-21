@@ -15,4 +15,4 @@
 #
 
 PRODUCT_MAKEFILES := \
-    $(LOCAL_DIR)/full_t0lte.mk
+    $(LOCAL_DIR)/havoc_t0lte.mk
