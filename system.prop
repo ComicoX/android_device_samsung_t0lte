@@ -2,6 +2,10 @@
 # system.prop for t0lte
 #
 
+ro.havoc.maintainer=ComicoTeam
+
+dalvik.vm.dexopt-data-only=1
+dalvik.vm.dex2oat-Xmx=256m
 rild.libpath=/system/lib/libsec-ril.so
 ro.telephony.default_network=9
 telephony.lteOnGsmDevice=1
@@ -10,4 +14,31 @@ ro.ril.telephony.mqanelements=6
 ro.hdcp2.rx=tz
 ro.sf.lcd_density=320
 ro.lcd_min_brightness=20
+
+# Camera API
+persist.camera.HAL3.enabled=1
+
+# EGL blobs crash on screen off
 ro.egl.destroy_after_detach=true
+
+# Google Assistant
+ro.opa.eligible_device=true
+
+# sdcardfs
+ro.sys.sdcardfs=true
+
+# GPS
+#ro.ril.def.agps.mode=1
+
+# ADB
+ro.debug_level=0x4948
+ro.adb.secure=0
+ro.secure=0
+ro.debuggable=1
+persist.service.adb.enable=1
+persist.service.debuggable=1
+persist.sys.usb.config=mtp,adb
+
+#
+# ~system.prop for t0lte
+#
