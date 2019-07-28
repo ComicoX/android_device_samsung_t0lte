@@ -18,6 +18,8 @@
  * limitations under the License.
  */
 
+#define CONFIG_FILE "/system/etc/sound/tiny_hw.xml"
+
 /* ALSA cards for WM1811 */
 #define CARD_DEFAULT  0
 
@@ -97,6 +99,66 @@ enum output_type {
     OUTPUT_TOTAL
 };
 
+enum tty_modes {
+    TTY_MODE_OFF,
+    TTY_MODE_VCO,
+    TTY_MODE_HCO,
+    TTY_MODE_FULL
+};
+
+/* ACDB Device ID macros */
+#define DEVICE_HANDSET_RX_ACDB_ID                       7 // HANDSET_SPKR
+#define DEVICE_HANDSET_TX_ACDB_ID                       4 // HANDSET_MIC
+#define DEVICE_SPEAKER_RX_ACDB_ID                       15// SPKR_PHONE_SPKR_STEREO
+#define DEVICE_SPEAKER_MONO_RX_ACDB_ID                  14// SPKR_PHONE_SPKR_MONO
+#define DEVICE_SPEAKER_STEREO_RX_ACDB_ID                15// SPKR_PHONE_SPKR_STEREO
+#define DEVICE_SPEAKER_TX_ACDB_ID                       11// SPKR_PHONE_MIC
+#define DEVICE_HEADSET_RX_ACDB_ID                       10// HEADSET_SPKR_STEREO
+#define DEVICE_HEADSET_TX_ACDB_ID                       8 // HEADSET_MIC
+#define DEVICE_DUALMIC_HANDSET_TX_BROADSIDE_ACDB_ID     5 // HANDSET_MIC_BROADSIDE
+#define DEVICE_DUALMIC_HANDSET_TX_ENDFIRE_ACDB_ID       6 // HANDSET_MIC_ENDFIRE
+#define DEVICE_DUALMIC_SPEAKER_TX_BROADSIDE_ACDB_ID     12// SPKR_PHONE_MIC_BROADSIDE
+#define DEVICE_DUALMIC_SPEAKER_TX_ENDFIRE_ACDB_ID       13// SPKR_PHONE_MIC_ENDFIRE
+#define DEVICE_DUALMIC_HANDSET_STEREO_ACDB_ID           34
+#define DEVICE_DUALMIC_SPEAKER_PHONE_STEREO_ACDB_ID     35
+#define DEVICE_TTY_HEADSET_MONO_RX_ACDB_ID              17// TTY_HEADSET_SPKR
+#define DEVICE_TTY_HEADSET_MONO_TX_ACDB_ID              16// TTY_HEADSET_MIC
+#define DEVICE_BT_SCO_RX_ACDB_ID                        22// BT_SCO_SPKR
+#define DEVICE_BT_SCO_TX_ACDB_ID                        21// BT_SCO_SPKR
+#define DEVICE_BT_SCO_RX_WB_ACDB_ID                     39// BT_SCO_WB_SPKR
+#define DEVICE_BT_SCO_TX_WB_ACDB_ID                     38// BT_SCO_WB_MIC
+#define DEVICE_SPEAKER_HEADSET_RX_ACDB_ID               DEVICE_HEADSET_RX_ACDB_ID // Use headset calibration
+#define DEVICE_HDMI_STEREO_RX_ACDB_ID                   18// HDMI_SPKR
+#define DEVICE_ANC_HEADSET_STEREO_RX_ACDB_ID            26// ANC RX, same as regular headset
+#define DEVICE_QUADMIC_ACDB_ID                          19// QUADMIC_SKPR
+#define DEVICE_PROXY_RX_ACDB_ID                         DEVICE_HDMI_STEREO_RX_ACDB_ID
+#define DEVICE_TTY_VCO_HANDSET_TX_ACDB_ID               36// TTY_VCO_HANDSET_MIC
+#define DEVICE_TTY_HCO_HANDSET_RX_ACDB_ID               37// TTY_HCO_HANDSET_SPRK
+#define DEVICE_HANDSET_TX_FV5_ACDB_ID                   40
+#define DEVICE_DUALMIC_HANDSET_TX_ENDFIRE_FV5_ACDB_ID   41
+#define DEVICE_SPEAKER_TX_FV5_ACDB_ID                   42
+#define DEVICE_DUALMIC_SPEAKER_TX_ENDFIRE_FV5_ACDB_ID   43
+#define DEVICE_INCALL_VOICE_RECORD_STEREO_ACDB_ID       45
+#define DEVICE_INCALL_MUSIC_DELIVERY_MONO_ACDB_ID       46
+#define DEVICE_INCALL_VOICE_RECORD_MONO_ACDB_ID         47
+#define DEVICE_CAMCORDER_TX_ACDB_ID                     61// CAMCORDER_TX
+#define DEVICE_VOICE_RECOGNITION_ACDB_ID                62// VOICE_RECOGNITION
+
+#define ANC_FLAG        0x00000001
+#define DMIC_FLAG       0x00000002
+#define QMIC_FLAG       0x00000004
+#define TTY_OFF         0x00000010
+#define TTY_FULL        0x00000020
+#define TTY_VCO         0x00000040
+#define TTY_HCO         0x00000080
+#define TTY_CLEAR       0xFFFFFF0F
+
+struct mixer_ctls
+{
+    struct mixer_ctl *mixinl_in1l_volume;
+    struct mixer_ctl *mixinl_in2l_volume;
+};
+
 struct route_setting
 {
     char *ctl_name;
@@ -105,11 +167,6 @@ struct route_setting
 };
 
 struct route_setting voicecall_default[] = {
-    { .ctl_name = "DAC1L Mixer AIF1.1 Switch", .intval = 1, },
-    { .ctl_name = "DAC1R Mixer AIF1.1 Switch", .intval = 1, },
-    { .ctl_name = "AIF2ADCL DRC Switch", .intval = 0, },
-    { .ctl_name = "AIF2DACL Source", .intval = 0, },
-    { .ctl_name = "AIF2DACR Source", .intval = 0, },
     { .ctl_name = "AIF2 Mode", .intval = 0, },
     { .ctl_name = "DAC1L Mixer AIF1.1 Switch", .intval = 1, },
     { .ctl_name = "DAC1R Mixer AIF1.1 Switch", .intval = 1, },
@@ -120,82 +177,73 @@ struct route_setting voicecall_default[] = {
 };
 
 struct route_setting voicecall_default_disable[] = {
+    { .ctl_name = "AIF2 Mode", .intval = 0, },
     { .ctl_name = "DAC1L Mixer AIF2 Switch", .intval = 0, },
     { .ctl_name = "DAC1R Mixer AIF2 Switch", .intval = 0, },
     { .ctl_name = "AIF2DAC Mux", .strval = "AIF3DACDAT", },
-    { .ctl_name = "AIF2 Mode", .intval = 1, },
+    { .ctl_name = "Main Mic Switch", .intval = 0, },
+    { .ctl_name = "MIXINL IN2L Switch", .intval = 0, },
+    { .ctl_name = "Sub Mic Switch", .intval = 0, },
+    { .ctl_name = "MIXINR IN1R Switch", .intval = 0, },
     { .ctl_name = NULL, },
 };
 
 struct route_setting default_input[] = {
     { .ctl_name = "Main Mic Switch", .intval = 1, },
     { .ctl_name = "MainMicBias Mode", .intval = 1, },
-    { .ctl_name = "AIF1ADCL Source", .intval = 0, },
-    { .ctl_name = "AIF2ADCL Source", .intval = 0, },
+    { .ctl_name = "IN2L Volume", .intval = 28, },
     { .ctl_name = "MIXINL IN2L Switch", .intval = 1, },
-    { .ctl_name = "IN2L Volume", .intval = 25, },
     { .ctl_name = "MIXINL IN2L Volume", .intval = 0, },
-    { .ctl_name = "AIF2ADC Volume", .intval = 96, },
-    { .ctl_name = "AIF2ADCL DRC Switch", .intval = 0, },
+    { .ctl_name = "AIF1ADC1 HPF Mode", .intval = 0, },
+    { .ctl_name = "AIF1ADC1 HPF Switch", .intval = 1, },
     { .ctl_name = NULL, },
 };
 
 struct route_setting default_input_disable[] = {
     { .ctl_name = "Main Mic Switch", .intval = 0, },
-    { .ctl_name = "MainMicBias Mode", .intval = 0, },
+    { .ctl_name = "IN2L Volume", .intval = 4, },
     { .ctl_name = "MIXINL IN2L Switch", .intval = 0, },
-    { .ctl_name = "AIF2DACL Source", .intval = 0, },
-    { .ctl_name = "AIF2DACR Source", .intval = 1, },
+    { .ctl_name = "AIF1ADC1 HPF Switch", .intval = 0, },
     { .ctl_name = NULL, },
 };
 
 struct route_setting noise_suppression[] = {
     { .ctl_name = "Sub Mic Switch", .intval = 1, },
-    { .ctl_name = "SubMicBias Mode", .intval = 1, },
     { .ctl_name = "IN1R Volume", .intval = 25, },
     { .ctl_name = "MIXINR IN1R Switch", .intval = 1, },
     { .ctl_name = "MIXINR IN1R Volume", .intval = 0, },
     { .ctl_name = "AIF1ADCR Source", .intval = 1, },
     { .ctl_name = NULL, },
 };
+
 struct route_setting noise_suppression_disable[] = {
     { .ctl_name = "Sub Mic Switch", .intval = 0, },
-    { .ctl_name = "SubMicBias Mode", .intval = 0, },
+    { .ctl_name = "IN1R Volume", .intval = 7, },
     { .ctl_name = "MIXINR IN1R Switch", .intval = 0, },
     { .ctl_name = "MIXINR IN1R Volume", .intval = 0, },
     { .ctl_name = NULL, },
 };
 
 struct route_setting headset_input[] = {
-    { .ctl_name = "AIF2DAC2L Mixer AIF2 Switch", .intval = 0, },
-    { .ctl_name = "AIF2DAC2R Mixer AIF2 Switch", .intval = 0, },
-    { .ctl_name = "Headphone ZC Switch", .intval = 0, },
-    { .ctl_name = "AIF1DAC1 Volume", .intval = 96, },
-    { .ctl_name = "AIF2DAC Volume", .intval = 96, },
-    { .ctl_name = "AIF1 Boost Volume", .intval = 0, },
-    { .ctl_name = "AIF2 Boost Volume", .intval = 0, },
-    { .ctl_name = "DAC1 Volume", .intval = 96, },
-    { .ctl_name = "Headphone Volume", .intval = 49, },
     { .ctl_name = "MIXINL IN2L Switch", .intval = 0, },
     { .ctl_name = "MIXINR IN1R Switch", .intval = 0, },
     { .ctl_name = "Headset Mic Switch", .intval = 1, },
+    { .ctl_name = "IN1L Volume", .intval = 18, },
+    { .ctl_name = "MIXINL IN1L Switch", .intval = 1, },
+    { .ctl_name = "MIXINL IN1L Volume", .intval = 0, },
+    { .ctl_name = "AIF1ADC1 HPF Mode", .intval = 1, },
+    { .ctl_name = "AIF1ADC1 HPF Switch", .intval = 1, },
+    { .ctl_name = "AIF1ADC1 Volume", .intval = 96, },
     { .ctl_name = "AIF1ADCL Source", .intval = 0, },
     { .ctl_name = "AIF1ADCR Source", .intval = 0, },
-    { .ctl_name = "AIF2ADCL Source", .intval = 0, },
-    { .ctl_name = "MIXINL IN1L Switch", .intval = 1, },
-    { .ctl_name = "IN1L Volume", .intval = 28, },
-    { .ctl_name = "MIXINL IN1L Volume", .intval = 0, },
-    { .ctl_name = "DAC2 Left Sidetone Volume", .intval = 12, },
-    { .ctl_name = "AIF2ADC Volume", .intval = 96, },
-    { .ctl_name = "AIF2ADCL DRC Switch", .intval = 0, },
     { .ctl_name = NULL, },
 };
 
 struct route_setting headset_input_disable[] = {
     { .ctl_name = "Headset Mic Switch", .intval = 0, },
     { .ctl_name = "MIXINL IN1L Switch", .intval = 0, },
-    { .ctl_name = "AIF2DACL Source", .intval = 0, },
-    { .ctl_name = "AIF2DACR Source", .intval = 1, },
+    { .ctl_name = "AIF1ADC1 HPF Mode", .intval = 0, },
+    { .ctl_name = "AIF1ADC1 HPF Switch", .intval = 0, },
     { .ctl_name = NULL, },
 };
 
